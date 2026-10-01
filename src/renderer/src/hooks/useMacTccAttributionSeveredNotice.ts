@@ -72,7 +72,15 @@ export function useMacTccAttributionSeveredNotice(): void {
     ): void => {
       // Why: a measured folder denial is the same severed daemon; its Fix dialog is the better
       // remedy, so one cause gets one toast. Severed without a denial (Local Network) still toasts.
-      if (health !== 'severed' || folderNoticeOwnsCause) {
+      if (health === 'severed' && folderNoticeOwnsCause) {
+        if (toastedThisSession.current) {
+          toast.dismiss(SEVERED_TCC_NOTICE_ID)
+          // Yielding is not the once-per-session showing: re-raise once the folder notice lets go.
+          toastedThisSession.current = false
+        }
+        return
+      }
+      if (health !== 'severed') {
         if (toastedThisSession.current) {
           toast.dismiss(SEVERED_TCC_NOTICE_ID)
         }
@@ -175,8 +183,14 @@ export function useMacTccAttributionSeveredNotice(): void {
       checkInFlight.current = true
       try {
         const { health, folderAccessMismatch } = await macTccAttribution()
-        applySeveredNotice(health, (folderAccessMismatch ?? null) !== null)
-        applyFolderAccessNotice(folderAccessMismatch ?? null)
+        const mismatch = folderAccessMismatch ?? null
+        // Why not after X: a dismissed folder notice cannot come back, so it no longer owns the remedy.
+        const folderNoticeOwnsCause =
+          mismatch !== null &&
+          useMacFolderAccessFixStore.getState().noticePhaseByScope.get(mismatch.daemonScope) !==
+            'dismissed'
+        applySeveredNotice(health, folderNoticeOwnsCause)
+        applyFolderAccessNotice(mismatch)
       } catch {
         // Rejection clears the guard so a later focus can retry.
       } finally {
