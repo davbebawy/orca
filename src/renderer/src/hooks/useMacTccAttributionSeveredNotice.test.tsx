@@ -693,6 +693,32 @@ describe('useMacTccAttributionSeveredNotice folder-access notice', () => {
     })
   })
 
+  it('keeps a severed toast the user dismissed down after a transient folder denial', async () => {
+    macTccAttribution.mockResolvedValueOnce({ health: 'severed', folderAccessMismatch: null })
+    render(<MacosTccPromptNoticeHost />)
+    await waitFor(() => {
+      expect(severedNoticeCalls()).toHaveLength(1)
+    })
+    act(() => {
+      severedNoticeCalls()[0]?.options.onDismiss?.()
+    })
+    macTccAttribution.mockResolvedValueOnce({ health: 'severed', folderAccessMismatch: SCOPE_A })
+    act(() => {
+      window.dispatchEvent(new Event('focus'))
+    })
+    await waitFor(() => {
+      expect(folderNoticeCalls()).toHaveLength(1)
+    })
+    macTccAttribution.mockResolvedValue({ health: 'severed', folderAccessMismatch: null })
+    act(() => {
+      window.dispatchEvent(new Event('focus'))
+    })
+    await waitFor(() => {
+      expect(macTccAttribution).toHaveBeenCalledTimes(3)
+    })
+    expect(severedNoticeCalls()).toHaveLength(1)
+  })
+
   it('raises the severed toast when the user already dismissed the folder notice', async () => {
     macTccAttribution.mockResolvedValue({ health: 'intact', folderAccessMismatch: SCOPE_A })
     render(<MacosTccPromptNoticeHost />)
