@@ -31,10 +31,9 @@ export function useMacTccAttributionSevered(refreshRevision = 0): MacTccAttribut
         health === 'severed'
           ? {
               severed: true,
-              preservedSessionCount:
-                deferredReplacement?.reason === 'severed_tcc_attribution'
-                  ? deferredReplacement.liveSessionCount
-                  : null
+              // Why any reason: after an update the stale-bundle check usually declines first,
+              // and the sessions it kept are the same ones keeping this daemon severed.
+              preservedSessionCount: deferredReplacement?.liveSessionCount ?? null
             }
           : HEALTHY_STATE
       )

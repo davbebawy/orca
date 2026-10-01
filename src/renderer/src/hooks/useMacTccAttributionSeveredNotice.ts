@@ -66,8 +66,13 @@ export function useMacTccAttributionSeveredNotice(): void {
       openSettingsPage()
     }
 
-    const applySeveredNotice = (health: PtyManagementMacTccAttributionHealth): void => {
-      if (health !== 'severed') {
+    const applySeveredNotice = (
+      health: PtyManagementMacTccAttributionHealth,
+      folderNoticeOwnsCause: boolean
+    ): void => {
+      // Why: a measured folder denial is the same severed daemon; its Fix dialog is the better
+      // remedy, so one cause gets one toast. Severed without a denial (Local Network) still toasts.
+      if (health !== 'severed' || folderNoticeOwnsCause) {
         if (toastedThisSession.current) {
           toast.dismiss(SEVERED_TCC_NOTICE_ID)
         }
@@ -170,7 +175,7 @@ export function useMacTccAttributionSeveredNotice(): void {
       checkInFlight.current = true
       try {
         const { health, folderAccessMismatch } = await macTccAttribution()
-        applySeveredNotice(health)
+        applySeveredNotice(health, (folderAccessMismatch ?? null) !== null)
         applyFolderAccessNotice(folderAccessMismatch ?? null)
       } catch {
         // Rejection clears the guard so a later focus can retry.

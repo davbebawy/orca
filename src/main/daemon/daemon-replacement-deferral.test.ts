@@ -53,6 +53,17 @@ describe('daemon replacement deferral', () => {
     expect(sink.flush).toHaveBeenCalledTimes(1)
   })
 
+  it('emits once while the same decision repeats on every new terminal', () => {
+    recordDaemonReplacementDeferral('severed_tcc_attribution', 3)
+    recordDaemonReplacementDeferral('severed_tcc_attribution', 3)
+    expect(records).toHaveLength(1)
+    expect(sink.flush).toHaveBeenCalledTimes(1)
+
+    recordDaemonReplacementDeferral('severed_tcc_attribution', 4)
+    expect(records).toHaveLength(2)
+    expect(getDaemonReplacementDeferral()).toMatchObject({ liveSessionCount: 4 })
+  })
+
   it('never lets diagnostics fail the daemon launch path', () => {
     setActiveSink({
       push: () => {

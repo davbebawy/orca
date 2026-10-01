@@ -88,13 +88,20 @@ it('explains why the daemon was preserved when replacement was declined for live
   expect(alert?.textContent).toContain('Documents, Desktop and Downloads')
   expect(alert?.textContent).toContain('live terminal sessions (20)')
 
+  // After an update the stale-bundle check declines first; those are the same kept sessions.
   stubAttributionHealth('severed', { reason: 'stale_bundle', liveSessionCount: 3, observedAtMs: 1 })
   await act(async () => {
     root.render(<TerminalTccAttributionNotice key="other-reason" />)
   })
-  expect(container.querySelector('[role="alert"]')?.textContent).not.toContain(
-    'live terminal sessions'
+  expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+    'live terminal sessions (3)'
   )
+
+  stubAttributionHealth('intact', { reason: 'stale_bundle', liveSessionCount: 3, observedAtMs: 1 })
+  await act(async () => {
+    root.render(<TerminalTccAttributionNotice key="intact" />)
+  })
+  expect(container.querySelector('[role="alert"]')).toBeNull()
 })
 
 it('navigates to Manage Sessions from the banner action', async () => {

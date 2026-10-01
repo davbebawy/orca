@@ -654,12 +654,28 @@ describe('useMacTccAttributionSeveredNotice folder-access notice', () => {
     expect(dismissedEvents()).toHaveLength(1)
   })
 
-  it('raises both notices when attribution is severed and a folder is denied', async () => {
+  it('raises only the folder notice when the severed daemon is also denying a folder', async () => {
     macTccAttribution.mockResolvedValue({ health: 'severed', folderAccessMismatch: SCOPE_A })
     render(<MacosTccPromptNoticeHost />)
     await waitFor(() => {
-      expect(toast.warning).toHaveBeenCalledTimes(2)
+      expect(folderNoticeCalls()).toHaveLength(1)
     })
-    expect(folderNoticeCalls()).toHaveLength(1)
+    expect(toast.warning).toHaveBeenCalledTimes(1)
+  })
+
+  it('takes down the severed toast once a folder denial explains the same daemon', async () => {
+    macTccAttribution.mockResolvedValueOnce({ health: 'severed', folderAccessMismatch: null })
+    render(<MacosTccPromptNoticeHost />)
+    await waitFor(() => {
+      expect(toast.warning).toHaveBeenCalledTimes(1)
+    })
+    macTccAttribution.mockResolvedValue({ health: 'severed', folderAccessMismatch: SCOPE_A })
+    act(() => {
+      window.dispatchEvent(new Event('focus'))
+    })
+    await waitFor(() => {
+      expect(toast.dismiss).toHaveBeenCalledWith('mac-tcc-attribution-severed')
+      expect(folderNoticeCalls()).toHaveLength(1)
+    })
   })
 })

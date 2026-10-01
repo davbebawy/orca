@@ -22,6 +22,11 @@ export function recordDaemonReplacementDeferral(
   reason: DaemonReplaceReason,
   liveSessionCount: number | null
 ): DaemonReplacementDeferral {
+  // Why: the pre-spawn path declines again on every new terminal; only a changed decision is
+  // worth a span and a synchronous flush.
+  if (latestDeferral?.reason === reason && latestDeferral.liveSessionCount === liveSessionCount) {
+    return latestDeferral
+  }
   const deferral: DaemonReplacementDeferral = {
     reason,
     liveSessionCount,
