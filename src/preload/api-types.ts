@@ -195,6 +195,7 @@ export type {
 export type {
   PtyManagementApi,
   PtyManagementDaemonCwdClass,
+  PtyManagementDaemonReplacementDeferral,
   PtyManagementFolderAccessMismatch,
   PtyManagementMacTccAttributionHealth,
   PtyManagementSession
